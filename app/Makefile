@@ -46,7 +46,7 @@ DEFINES += SUBSTRATE_PARSER_FULL
 endif
 
 APPNAME = "Lisk"
-APPPATH = "44'/134'" --path "44'/1'"
+APPPATH = "44'/134'"
 
 else
 define error_message
@@ -58,8 +58,6 @@ $(error "$(error_message)")
 endif
 
 APP_LOAD_PARAMS = --curve ed25519 $(COMMON_LOAD_PARAMS) --path $(APPPATH)
-
-NANOS_STACK_SIZE := 2800
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.devices
 
