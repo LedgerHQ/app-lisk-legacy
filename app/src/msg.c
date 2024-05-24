@@ -64,10 +64,41 @@ zxerr_t msg_getItem(int8_t displayIdx,
     }
 
     uint8_t tmp_hash[32] = {0};
-    crypto_hash(message, messageLength, tmp_hash, sizeof(tmp_hash));
+    parser_error_t err = crypto_hash(message, messageLength, tmp_hash, sizeof(tmp_hash));
 
-    if (displayIdx == 0) {
+    if (displayIdx == 0 && err == parser_ok) {
         snprintf(outKey, outKeyLen, "Msg sign");
+        pageStringHex(outVal, outValLen, (const char*)tmp_hash, sizeof(tmp_hash), pageIdx, pageCount);
+        return zxerr_ok;
+    }
+
+    return zxerr_no_data;
+}
+
+zxerr_t claim_getItem(int8_t displayIdx,
+                     char *outKey, uint16_t outKeyLen,
+                     char *outVal, uint16_t outValLen,
+                     uint8_t pageIdx, uint8_t *pageCount) {
+    ZEMU_LOGF(200, "[claim_getItem] %d/%d\n", displayIdx, pageIdx)
+
+    MEMZERO(outKey, outKeyLen);
+    MEMZERO(outVal, outValLen);
+    snprintf(outKey, outKeyLen, "?");
+    snprintf(outVal, outValLen, " ");
+    *pageCount = 1;
+
+    const uint8_t *message = tx_get_buffer();
+    const uint16_t messageLength = tx_get_buffer_length();
+
+    if (messageLength == 0) {
+        return zxerr_no_data;
+    }
+
+    uint8_t tmp_hash[32] = {0};
+    parser_error_t err = crypto_hash(message, messageLength, tmp_hash, sizeof(tmp_hash));
+
+    if (displayIdx == 0 && err == parser_ok) {
+        snprintf(outKey, outKeyLen, "Msg Claim");
         pageStringHex(outVal, outValLen, (const char*)tmp_hash, sizeof(tmp_hash), pageIdx, pageCount);
         return zxerr_ok;
     }
