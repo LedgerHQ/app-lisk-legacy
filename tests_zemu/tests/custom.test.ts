@@ -252,3 +252,34 @@ test.concurrent.each(models)('sign message invalid', async function (m) {
     await sim.close()
   }
 })
+
+test.concurrent.each(models)('claim message', async function (m) {
+  const sim = new Zemu(m.path)
+  try {
+    await sim.start({ ...defaultOptions, model: m.name })
+    const app = new LiskApp(sim.getTransport())
+
+    const message = Buffer.from(tx_message)
+    const responseAddr = await app.getAddressAndPubKey(hdpath)
+    const pubKey = responseAddr.pubKey
+
+    // do not wait here.. we need to navigate
+    const signatureRequest = app.claimMessage(hdpath, message)
+
+    // Wait until we are not in the main menu
+    await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+    await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-claim_message`)
+
+    const signatureResponse = await signatureRequest
+    console.log(signatureResponse)
+
+    expect(signatureResponse.return_code).toEqual(0x9000)
+    expect(signatureResponse.error_message).toEqual('No errors')
+
+    const valid = ed25519.verify(signatureResponse.signature, message, pubKey)
+    expect(valid).toEqual(true)
+    console.log(valid)
+  } finally {
+    await sim.close()
+  }
+})
